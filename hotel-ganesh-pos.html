@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hotel Ganesh - POS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital@1&display=swap">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<style>
+  :root{
+    --page-bg:#EDE3DD;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --page-bg:#171312; }
+  }
+  :root[data-theme="dark"]{ --page-bg:#171312; }
+  html,body{ margin:0; background:var(--page-bg); }
+  body{ font-family:'Poppins', sans-serif; }
+  .no-scrollbar::-webkit-scrollbar{ display:none; }
+  .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+
+/* ---------------------------------- ICONS ---------------------------------- */
+function Icon({ name, size = 16, color = "currentColor", strokeWidth = 2, className = "" }) {
+  const s = { width: size, height: size, fill: "none", stroke: color, strokeWidth, strokeLinecap: "round", strokeLinejoin: "round" };
+  const paths = {
+    arrowLeft: <><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></>,
+    menu: <><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></>,
+    search: <><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></>,
+    plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
+    minus: <path d="M5 12h14" />,
+    cart: <><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.7 13.4a2 2 0 002 1.6h9.7a2 2 0 002-1.6L23 6H6" /></>,
+    printer: <><path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></>,
+    save: <><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></>,
+    check: <><path d="M22 11.1V12a10 10 0 11-5.9-9.1" /><polyline points="22 4 12 14.01 9 11.01" /></>,
+    wallet: <><path d="M21 12V7H5a2 2 0 010-4h14v4" /><path d="M3 5v14a2 2 0 002 2h16v-5" /><path d="M18 12a2 2 0 000 4h4v-4z" /></>,
+    card: <><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></>,
+    dots: <g fill={color} stroke="none"><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></g>,
+    calendar: <><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>,
+    users: <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.9" /><path d="M16 3.1a4 4 0 010 7.8" /></>,
+    receipt: <><path d="M4 2h16v20l-3-2-3 2-3-2-3 2-3-2-1 1z" /><line x1="8" y1="7" x2="16" y2="7" /><line x1="8" y1="11" x2="16" y2="11" /></>,
+    history: <><path d="M3 12a9 9 0 109-9 9.8 9.8 0 00-6.7 2.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></>,
+    plusCircle: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></>,
+    chevronDown: <polyline points="6 9 12 15 18 9" />,
+    chefHat: <><path d="M6 13.9A4 4 0 017.4 6a5.1 5.1 0 011-1.5 5 5 0 017.1 0A5.1 5.1 0 0116.6 6 4 4 0 0118 13.9V21H6z" /><line x1="6" y1="17" x2="18" y2="17" /></>,
+    wifi: <><path d="M5 12.6a11 11 0 0114 0" /><path d="M1.4 9a16 16 0 0121.2 0" /><path d="M8.5 16.1a6 6 0 016.9 0" /><circle cx="12" cy="20" r="1" fill={color} stroke="none" /></>,
+    signal: <g fill={color} stroke="none"><rect x="1" y="14" width="3" height="6" rx="0.5" /><rect x="6" y="10" width="3" height="10" rx="0.5" /><rect x="11" y="6" width="3" height="14" rx="0.5" /><rect x="16" y="2" width="3" height="18" rx="0.5" /></g>,
+    battery: <><rect x="1" y="6" width="18" height="12" rx="2" /><line x1="23" y1="13" x2="23" y2="11" /><rect x="3" y="8" width="14" height="8" rx="1" fill={color} stroke="none" /></>,
+    dashboard: <><rect x="3" y="3" width="7" height="9" rx="1" /><rect x="14" y="3" width="7" height="5" rx="1" /><rect x="14" y="12" width="7" height="9" rx="1" /><rect x="3" y="16" width="7" height="5" rx="1" /></>,
+    grid: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></>,
+    utensils: <><path d="M16 2l6 6" /><path d="M3 3l14 14" /><path d="M17 3l4 4-4 4" /><path d="M4 16l4 4" /></>,
+  };
+  return <svg viewBox="0 0 24 24" className={className} {...s}>{paths[name]}</svg>;
+}
+
+/* ---------------------------------- THEME ---------------------------------- */
+const C = {
+  maroon: "#A31E24", maroonDark: "#7C1418", maroonSoft: "#FDECEC", maroonSoft2: "#FBDCDC",
+  cream: "#FFFBF6", paper: "#FFFFFF", gold: "#8B6A3F", ink: "#2A1414", inkSoft: "#7A6666", line: "#F1E4E4",
+};
+
+/* ---------------------------------- DATA ---------------------------------- */
+const CATEGORIES = ["Breakfast", "Meals", "Chapati Bhaji", "Tea & Coffee"];
+const MENU = {
+  Breakfast: [
+    { id: "pohe", name: "Pohe", price: 30, emoji: "🍚" },
+    { id: "upma", name: "Upma", price: 30, emoji: "🥣" },
+    { id: "sheera", name: "Sheera", price: 40, emoji: "🍮" },
+    { id: "khichdi", name: "Khichdi", price: 50, emoji: "🍲" },
+    { id: "misalpav", name: "Misal Pav", price: 90, emoji: "🌶️" },
+    { id: "vadasambar", name: "Vada Sambar", price: 55, priceNote: "₹55 / 70", emoji: "🍩" },
+    { id: "idlisambar", name: "Idli Sambar", price: 30, priceNote: "₹30 / 50", emoji: "⚪" },
+  ],
+  Meals: [
+    { id: "vegthali", name: "Veg Thali", price: 120, emoji: "🍽️" },
+    { id: "dalrice", name: "Dal Rice", price: 80, emoji: "🍚" },
+    { id: "vegpulao", name: "Veg Pulao", price: 90, emoji: "🍛" },
+    { id: "paneermasala", name: "Paneer Masala", price: 140, emoji: "🧡" },
+    { id: "curdrice", name: "Curd Rice", price: 70, emoji: "🥣" },
+  ],
+  "Chapati Bhaji": [
+    { id: "chapati", name: "Chapati (2 pc)", price: 20, emoji: "🫓" },
+    { id: "bhajipav", name: "Bhaji Pav", price: 40, emoji: "🍔" },
+    { id: "aloosabzi", name: "Aloo Sabzi", price: 50, emoji: "🥔" },
+    { id: "paneerbhurji", name: "Paneer Bhurji", price: 90, emoji: "🍳" },
+    { id: "dalfry", name: "Dal Fry", price: 60, emoji: "🍲" },
+  ],
+  "Tea & Coffee": [
+    { id: "tea", name: "Tea", price: 15, emoji: "☕" },
+    { id: "coffee", name: "Coffee", price: 20, emoji: "☕" },
+    { id: "masalatea", name: "Masala Tea", price: 20, emoji: "☕" },
+    { id: "blacktea", name: "Black Tea", price: 10, emoji: "🍵" },
+    { id: "lemontea", name: "Lemon Tea", price: 15, emoji: "🍋" },
+  ],
+};
+const ALL_ITEMS = Object.values(MENU).flat().reduce((acc, i) => (acc[i.id] = i, acc), {});
+const TABLES = [1, 2, 3, 4, 5];
+
+/* ------------------------------- SMALL PIECES ------------------------------- */
+function StatusBar() {
+  return (
+    <div className="flex items-center justify-between px-5 pt-3 pb-1 text-white text-[13px] font-medium">
+      <span>9:41</span>
+      <div className="flex items-center gap-1">
+        <Icon name="signal" size={13} color="white" /> <Icon name="wifi" size={13} color="white" /> <Icon name="battery" size={15} color="white" />
+      </div>
+    </div>
+  );
+}
+
+function Header({ title, onBack, right, menu }) {
+  return (
+    <div className="px-4 pb-4 pt-1 flex items-center gap-3 text-white">
+      {onBack ? (
+        <button onClick={onBack} className="p-1 -ml-1 active:opacity-60"><Icon name="arrowLeft" size={22} color="white" /></button>
+      ) : menu ? (
+        <button className="p-1 -ml-1 active:opacity-60"><Icon name="menu" size={22} color="white" /></button>
+      ) : (<span className="w-6" />)}
+      <h1 className="text-[17px] font-semibold tracking-tight flex-1">{title}</h1>
+      {right}
+    </div>
+  );
+}
+
+function Rupee({ n }) { return <>₹{Number(n).toLocaleString("en-IN")}</>; }
+
+function Stepper({ qty, onDec, onInc }) {
+  if (qty > 0) {
+    return (
+      <div className="flex items-center rounded-full overflow-hidden" style={{ border: `1.5px solid ${C.maroon}` }}>
+        <button onClick={onDec} className="w-7 h-7 flex items-center justify-center active:opacity-60" style={{ color: C.maroon }}><Icon name="minus" size={14} /></button>
+        <span className="w-6 text-center text-[13px] font-semibold" style={{ color: C.maroon }}>{qty}</span>
+        <button onClick={onInc} className="w-7 h-7 flex items-center justify-center text-white active:opacity-80" style={{ background: C.maroon }}><Icon name="plus" size={14} color="white" /></button>
+      </div>
+    );
+  }
+  return (
+    <button onClick={onInc} className="w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition-transform" style={{ background: C.maroon }}>
+      <Icon name="plus" size={16} color="white" />
+    </button>
+  );
+}
+
+/* --------------------------------- SCREENS ---------------------------------- */
+function HomeScreen({ go }) {
+  return (
+    <div className="flex flex-col h-full" style={{ background: C.cream }}>
+      <div style={{ background: `linear-gradient(180deg, ${C.maroon}, ${C.maroonDark})` }}>
+        <StatusBar />
+        <div className="flex flex-col items-center pt-4 pb-7 px-6">
+          <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-md">
+            <Icon name="chefHat" size={38} color={C.maroon} />
+          </div>
+          <p className="mt-3 text-[11px] tracking-wide text-white/80">होटेल</p>
+          <h1 className="text-2xl font-bold text-white leading-none">GANESH</h1>
+          <p className="text-white/85 text-[11px] mt-1">प्युअर व्हेज &nbsp;•&nbsp; PURE VEG</p>
+          <p className="text-white/70 text-[11px] mt-2 tracking-wide">AAVAD TUMCHI, CHAAV AAMCHI</p>
+        </div>
+      </div>
+      <div className="flex-1 px-5 pt-6 flex flex-col gap-3.5">
+        <NavCard icon={<Icon name="dashboard" size={20} color="white" />} label="Dashboard" onClick={() => go("dashboard")} />
+        <NavCard icon={<Icon name="grid" size={20} color="white" />} label="Tables" onClick={() => go("tables")} />
+        <NavCard icon={<Icon name="utensils" size={20} color="white" />} label="Menu" onClick={() => go("tables")} />
+        <div className="mt-auto mb-6 text-center">
+          <p className="italic text-[15px]" style={{ fontFamily: "'Playfair Display', serif", color: C.gold }}>Good Food Brings People Together</p>
+          <p className="text-[10px] mt-2" style={{ color: C.inkSoft }}>v1.0</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NavCard({ icon, label, onClick }) {
+  return (
+    <button onClick={onClick} className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-white active:scale-[0.98] transition-transform shadow-sm" style={{ background: C.maroon }}>
+      {icon}
+      <span className="text-[15px] font-medium flex-1 text-left">{label}</span>
+      <Icon name="arrowLeft" size={16} color="white" className="rotate-180 opacity-80" />
+    </button>
+  );
+}
+
+function DashboardScreen({ go, savedBills, cart }) {
+  const totalSales = savedBills.reduce((s, b) => s + b.total, 0);
+  const totalBills = savedBills.length;
+  const activeTables = TABLES.filter((t) => Object.values(cart[t] || {}).some((q) => q > 0)).length;
+  const byMethod = { Cash: 0, UPI: 0, Other: 0 };
+  savedBills.forEach((b) => (byMethod[b.payment] = (byMethod[b.payment] || 0) + b.total));
+
+  return (
+    <div className="flex flex-col h-full" style={{ background: C.cream }}>
+      <div style={{ background: C.maroon }}>
+        <StatusBar />
+        <Header title="Dashboard" onBack={() => go("home")} />
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-6">
+        <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 mb-4" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+          <Icon name="calendar" size={15} color={C.maroon} />
+          <span className="text-[13px] font-medium" style={{ color: C.ink }}>Tue, 15 Sep 2026</span>
+          <Icon name="chevronDown" size={14} className="ml-auto" color={C.inkSoft} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <StatCard icon={<span className="text-[15px] font-bold">₹</span>} label="Total Sales" value={<Rupee n={totalSales} />} />
+          <StatCard icon={<Icon name="receipt" size={16} />} label="Total Bills" value={totalBills} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          <StatCard icon={<Icon name="users" size={16} />} label="Active Tables" value={`${activeTables} / 5`} />
+          <StatCard icon={<Icon name="grid" size={16} />} label="Available Tables" value={`${5 - activeTables} / 5`} />
+        </div>
+        <p className="text-[13px] font-semibold mb-2" style={{ color: C.maroon }}>Today's Sales <span className="font-normal" style={{ color: C.inkSoft }}>(Payment Method)</span></p>
+        <div className="rounded-xl mb-5 overflow-hidden" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+          <PayRow icon={<Icon name="wallet" size={15} />} label="Cash" value={byMethod.Cash} />
+          <PayRow icon={<Icon name="card" size={15} />} label="UPI" value={byMethod.UPI} />
+          <PayRow icon={<Icon name="dots" size={15} />} label="Other" value={byMethod.Other} last />
+        </div>
+        <p className="text-[13px] font-semibold mb-2" style={{ color: C.maroon }}>Quick Actions</p>
+        <div className="grid grid-cols-2 gap-3">
+          <QuickBtn icon={<Icon name="receipt" size={15} />} label="View Today's Bills" />
+          <QuickBtn icon={<Icon name="history" size={15} />} label="View Reports" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value }) {
+  return (
+    <div className="rounded-xl px-4 py-3.5 flex flex-col gap-2" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: C.maroonSoft, color: C.maroon }}>{icon}</div>
+      <div className="text-lg font-bold" style={{ color: C.ink }}>{value}</div>
+      <div className="text-[11px]" style={{ color: C.inkSoft }}>{label}</div>
+    </div>
+  );
+}
+
+function PayRow({ icon, label, value, last }) {
+  return (
+    <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: last ? "none" : `1px solid ${C.line}` }}>
+      <span style={{ color: C.maroon }}>{icon}</span>
+      <span className="text-[13px] flex-1" style={{ color: C.ink }}>{label}</span>
+      <span className="text-[13px] font-semibold" style={{ color: C.ink }}><Rupee n={value} /></span>
+    </div>
+  );
+}
+
+function QuickBtn({ icon, label }) {
+  return (
+    <button className="flex items-center gap-2 px-3.5 py-3 rounded-xl text-[12.5px] font-medium active:scale-[0.98] transition-transform" style={{ background: C.paper, border: `1px solid ${C.line}`, color: C.ink }}>
+      <span style={{ color: C.maroon }}>{icon}</span>{label}
+      <Icon name="arrowLeft" size={13} color={C.inkSoft} className="rotate-180 ml-auto opacity-50" />
+    </button>
+  );
+}
+
+function TablesScreen({ go, cart, selectTable }) {
+  return (
+    <div className="flex flex-col h-full" style={{ background: C.cream }}>
+      <div style={{ background: C.maroon }}>
+        <StatusBar />
+        <Header title="Tables" onBack={() => go("home")} />
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4">
+        <div className="grid grid-cols-2 gap-3.5">
+          {TABLES.map((t) => {
+            const active = Object.values(cart[t] || {}).some((q) => q > 0);
+            return (
+              <button key={t} onClick={() => { selectTable(t); go("menu"); }}
+                className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.97] transition-transform"
+                style={{ background: active ? C.maroonSoft2 : C.paper, border: `1.5px solid ${active ? C.maroon : C.line}` }}>
+                <div className="text-2xl" style={{ color: C.maroon }}>🪑</div>
+                <span className="text-[13px] font-semibold" style={{ color: C.ink }}>Table</span>
+                <span className="text-lg font-bold" style={{ color: C.maroon }}>{t}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl px-3.5 py-3" style={{ background: C.maroonSoft }}>
+          <span style={{ color: C.maroon }}>ⓘ</span>
+          <p className="text-[12px] leading-snug" style={{ color: C.gold }}>Select a table to place order or view current order.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MenuScreen({ go, tableId, cart, setQty }) {
+  const [cat, setCat] = useState("Breakfast");
+  const [q, setQ] = useState("");
+  const tableCart = cart[tableId] || {};
+  const items = MENU[cat].filter((i) => i.name.toLowerCase().includes(q.toLowerCase()));
+  const count = Object.values(tableCart).reduce((s, n) => s + n, 0);
+  const total = Object.entries(tableCart).reduce((s, [id, n]) => s + n * ALL_ITEMS[id].price, 0);
+
+  return (
+    <div className="flex flex-col h-full" style={{ background: C.cream }}>
+      <div style={{ background: C.maroon }}>
+        <StatusBar />
+        <Header title={`Table ${tableId} - New Order`} onBack={() => go("tables")} />
+        <div className="flex gap-1.5 px-4 pb-3 overflow-x-auto no-scrollbar">
+          {CATEGORIES.map((c) => (
+            <button key={c} onClick={() => setCat(c)}
+              className="px-3.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap transition-colors"
+              style={c === cat ? { background: "white", color: C.maroon } : { background: "rgba(255,255,255,0.18)", color: "white" }}>
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="px-4 pt-3">
+        <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${cat}...`} className="text-[13px] flex-1 outline-none bg-transparent" style={{ color: C.ink }} />
+          <Icon name="search" size={15} color={C.inkSoft} />
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-3 flex flex-col gap-2.5">
+        {items.map((it) => (
+          <div key={it.id} className="flex items-center gap-3 rounded-xl p-2.5" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+            <div className="w-11 h-11 rounded-lg flex items-center justify-center text-xl shrink-0" style={{ background: C.maroonSoft }}>{it.emoji}</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13.5px] font-medium truncate" style={{ color: C.ink }}>{it.name}</p>
+              <p className="text-[12px]" style={{ color: C.inkSoft }}>{it.priceNote ? it.priceNote : <Rupee n={it.price} />}</p>
+            </div>
+            <Stepper qty={tableCart[it.id] || 0}
+              onDec={() => setQty(tableId, it.id, Math.max(0, (tableCart[it.id] || 0) - 1))}
+              onInc={() => setQty(tableId, it.id, (tableCart[it.id] || 0) + 1)} />
+          </div>
+        ))}
+      </div>
+      {count > 0 && (
+        <button onClick={() => go("bill")} className="mx-4 mb-4 rounded-xl px-4 py-3.5 flex items-center gap-2 text-white active:scale-[0.98] transition-transform" style={{ background: C.maroon }}>
+          <Icon name="cart" size={16} color="white" />
+          <span className="text-[13px] font-medium">{count} item{count > 1 ? "s" : ""} &nbsp;|&nbsp; <Rupee n={total} /></span>
+          <span className="ml-auto text-[13.5px] font-semibold">View Bill →</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function BillScreen({ go, tableId, cart, setQty, payment, setPayment }) {
+  const tableCart = cart[tableId] || {};
+  const lines = Object.entries(tableCart).filter(([, n]) => n > 0).map(([id, n]) => ({ ...ALL_ITEMS[id], qty: n }));
+  const subtotal = lines.reduce((s, l) => s + l.qty * l.price, 0);
+
+  return (
+    <div className="flex flex-col h-full" style={{ background: C.cream }}>
+      <div style={{ background: C.maroon }}>
+        <StatusBar />
+        <Header title={`Table ${tableId} - Bill`} onBack={() => go("menu")}
+          right={<button onClick={() => lines.forEach((l) => setQty(tableId, l.id, 0))} className="text-[12px] flex items-center gap-1 text-white/85">🗑 Clear All</button>} />
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-3">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 text-[11px] font-semibold px-1 pb-2" style={{ color: C.inkSoft }}>
+          <span>Item</span><span>Qty</span><span>Price</span><span className="text-right">Total</span>
+        </div>
+        <div className="flex flex-col gap-2 mb-3">
+          {lines.map((l) => (
+            <div key={l.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center rounded-xl px-3 py-2.5" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+              <span className="text-[13px] font-medium truncate" style={{ color: C.ink }}>{l.name}</span>
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setQty(tableId, l.id, Math.max(0, l.qty - 1))} className="w-5 h-5 rounded flex items-center justify-center" style={{ background: C.maroonSoft, color: C.maroon }}><Icon name="minus" size={11} /></button>
+                <span className="w-4 text-center text-[12.5px] font-semibold" style={{ color: C.ink }}>{l.qty}</span>
+                <button onClick={() => setQty(tableId, l.id, l.qty + 1)} className="w-5 h-5 rounded flex items-center justify-center" style={{ background: C.maroonSoft, color: C.maroon }}><Icon name="plus" size={11} /></button>
+              </div>
+              <span className="text-[12.5px]" style={{ color: C.inkSoft }}><Rupee n={l.price} /></span>
+              <span className="text-[13px] font-semibold text-right" style={{ color: C.ink }}><Rupee n={l.qty * l.price} /></span>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => go("menu")} className="w-full rounded-xl py-3 mb-5 text-[13px] font-medium flex items-center justify-center gap-2" style={{ border: `1.5px dashed ${C.maroon}`, color: C.maroon }}>
+          <Icon name="plusCircle" size={15} /> Add More Items
+        </button>
+        <div className="rounded-xl px-4 py-3.5 mb-4" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+          <Row label="Subtotal" value={<Rupee n={subtotal} />} />
+          <Row label="CGST (0%)" value="₹0" />
+          <Row label="SGST (0%)" value="₹0" />
+          <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: `1px solid ${C.line}` }}>
+            <span className="text-[14px] font-bold" style={{ color: C.maroon }}>Total Amount</span>
+            <span className="text-[16px] font-bold" style={{ color: C.maroon }}><Rupee n={subtotal} /></span>
+          </div>
+        </div>
+        <p className="text-[13px] font-semibold mb-2" style={{ color: C.ink }}>Payment Method</p>
+        <div className="grid grid-cols-3 gap-2.5 mb-1">
+          {[["Cash", <Icon name="wallet" size={15} />], ["UPI", <Icon name="card" size={15} />], ["Other", <Icon name="dots" size={15} />]].map(([m, icon]) => (
+            <button key={m} onClick={() => setPayment(m)}
+              className="flex flex-col items-center gap-1 py-3 rounded-xl text-[12px] font-medium transition-colors"
+              style={payment === m ? { background: C.maroon, color: "white" } : { background: C.paper, border: `1px solid ${C.line}`, color: C.ink }}>
+              {icon}{m}
+            </button>
+          ))}
+        </div>
+      </div>
+      <button disabled={!lines.length || !payment} onClick={() => go("preview")}
+        className="mx-4 mb-4 rounded-xl py-3.5 text-white text-[14px] font-semibold disabled:opacity-40 active:scale-[0.98] transition-transform" style={{ background: C.maroon }}>
+        Generate Bill →
+      </button>
+    </div>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="flex items-center justify-between py-1">
+      <span className="text-[13px]" style={{ color: C.inkSoft }}>{label}</span>
+      <span className="text-[13px]" style={{ color: C.ink }}>{value}</span>
+    </div>
+  );
+}
+
+function PreviewScreen({ go, tableId, cart, payment, billNo, saveBill }) {
+  const tableCart = cart[tableId] || {};
+  const lines = Object.entries(tableCart).filter(([, n]) => n > 0).map(([id, n]) => ({ ...ALL_ITEMS[id], qty: n }));
+  const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
+  const now = new Date();
+  const dateStr = "15 Sep 2026";
+  const timeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div className="flex flex-col h-full" style={{ background: C.cream }}>
+      <div style={{ background: C.maroon }}>
+        <StatusBar />
+        <Header title="Bill Preview" onBack={() => go("bill")} />
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-3">
+        <div className="rounded-2xl p-5" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+          <div className="flex flex-col items-center text-center mb-3">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-1.5" style={{ background: C.maroonSoft }}>
+              <Icon name="chefHat" size={22} color={C.maroon} />
+            </div>
+            <p className="text-[10px]" style={{ color: C.inkSoft }}>होटेल</p>
+            <p className="text-[15px] font-bold" style={{ color: C.maroon }}>GANESH</p>
+            <p className="text-[10px]" style={{ color: C.inkSoft }}>प्युअर व्हेज • PURE VEG</p>
+            <p className="text-[9.5px] mt-1" style={{ color: C.inkSoft }}>AAVAD TUMCHI, CHAAV AAMCHI</p>
+          </div>
+          <div className="border-t border-dashed my-3" style={{ borderColor: C.line }} />
+          <Row label="Bill No" value={billNo} />
+          <Row label="Date" value={dateStr} />
+          <Row label="Time" value={timeStr} />
+          <Row label="Table No" value={tableId} />
+          <div className="border-t border-dashed my-3" style={{ borderColor: C.line }} />
+          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 text-[10.5px] font-semibold pb-1.5" style={{ color: C.inkSoft }}>
+            <span>Item</span><span>Qty</span><span>Rate</span><span className="text-right">Amt</span>
+          </div>
+          {lines.map((l) => (
+            <div key={l.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 py-1 text-[12.5px]" style={{ color: C.ink }}>
+              <span className="truncate">{l.name}</span><span>{l.qty}</span><span><Rupee n={l.price} /></span>
+              <span className="text-right font-medium"><Rupee n={l.qty * l.price} /></span>
+            </div>
+          ))}
+          <div className="border-t border-dashed my-3" style={{ borderColor: C.line }} />
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] font-bold" style={{ color: C.maroon }}>Total Amount</span>
+            <span className="text-[16px] font-bold" style={{ color: C.maroon }}><Rupee n={total} /></span>
+          </div>
+          <Row label="Payment Method" value={payment} />
+          <div className="text-center mt-4">
+            <p className="italic text-[14px]" style={{ fontFamily: "'Playfair Display', serif", color: C.gold }}>Thank You!</p>
+            <p className="italic text-[14px]" style={{ fontFamily: "'Playfair Display', serif", color: C.gold }}>Visit Again.</p>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-3 px-4 mb-4">
+        <button onClick={() => window.print()} className="flex-1 rounded-xl py-3.5 text-[13.5px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform" style={{ background: C.paper, border: `1.5px solid ${C.maroon}`, color: C.maroon }}>
+          <Icon name="printer" size={16} /> Print Bill
+        </button>
+        <button onClick={saveBill} className="flex-1 rounded-xl py-3.5 text-[13.5px] font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform" style={{ background: C.maroon }}>
+          <Icon name="save" size={16} color="white" /> Save Bill
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SavedScreen({ go, lastBill }) {
+  return (
+    <div className="flex flex-col h-full" style={{ background: C.cream }}>
+      <div style={{ background: C.maroon }}>
+        <StatusBar />
+        <Header title="Bill Saved" menu />
+      </div>
+      <div className="flex-1 flex flex-col items-center px-6 pt-10">
+        <div className="w-24 h-24 rounded-full flex items-center justify-center mb-5" style={{ background: "#E8F6EC" }}>
+          <Icon name="check" size={52} color="#2E9E4F" strokeWidth={1.7} />
+        </div>
+        <h2 className="text-[19px] font-bold mb-1.5" style={{ color: C.ink }}>Bill Saved Successfully!</h2>
+        <p className="text-[13px] mb-8 text-center" style={{ color: C.inkSoft }}>
+          Bill No. <span className="font-semibold" style={{ color: C.ink }}>{lastBill && lastBill.billNo}</span> has been saved.
+        </p>
+        <div className="w-full flex flex-col gap-3">
+          <button onClick={() => go("dashboard")} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl active:scale-[0.98] transition-transform" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+            <Icon name="receipt" size={16} color={C.maroon} />
+            <span className="text-[13.5px] font-medium flex-1 text-left" style={{ color: C.ink }}>View Today's Bills</span>
+            <Icon name="arrowLeft" size={14} color={C.inkSoft} className="rotate-180 opacity-40" />
+          </button>
+          <button onClick={() => go("dashboard")} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl active:scale-[0.98] transition-transform" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+            <Icon name="history" size={16} color={C.maroon} />
+            <span className="text-[13.5px] font-medium flex-1 text-left" style={{ color: C.ink }}>View Bill History</span>
+            <Icon name="arrowLeft" size={14} color={C.inkSoft} className="rotate-180 opacity-40" />
+          </button>
+          <button onClick={() => go("tables")} className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-white active:scale-[0.98] transition-transform" style={{ background: C.maroon }}>
+            <Icon name="plusCircle" size={16} color="white" /> <span className="text-[13.5px] font-semibold">New Order</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- APP ------------------------------------ */
+function App() {
+  const [screen, setScreen] = useState("home");
+  const [selectedTable, setSelectedTable] = useState(1);
+  const [cart, setCart] = useState({});
+  const [payment, setPayment] = useState(null);
+  const [savedBills, setSavedBills] = useState([]);
+  const [lastBill, setLastBill] = useState(null);
+
+  const setQty = (tableId, itemId, qty) => setCart((prev) => ({ ...prev, [tableId]: { ...(prev[tableId] || {}), [itemId]: qty } }));
+  const go = (s) => setScreen(s);
+  const selectTable = (t) => { setSelectedTable(t); setPayment(null); };
+
+  const saveBill = () => {
+    const tableCart = cart[selectedTable] || {};
+    const lines = Object.entries(tableCart).filter(([, n]) => n > 0).map(([id, n]) => ({ ...ALL_ITEMS[id], qty: n }));
+    const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
+    const billNo = `HG-${(452 + savedBills.length).toString().padStart(5, "0")}`;
+    const bill = { billNo, table: selectedTable, total, payment, lines };
+    setSavedBills((prev) => [...prev, bill]);
+    setLastBill(bill);
+    setCart((prev) => ({ ...prev, [selectedTable]: {} }));
+    setPayment(null);
+    setScreen("saved");
+  };
+
+  const billNoPreview = `HG-${(452 + savedBills.length).toString().padStart(5, "0")}`;
+
+  const screenMap = {
+    home: <HomeScreen go={go} />,
+    dashboard: <DashboardScreen go={go} savedBills={savedBills} cart={cart} />,
+    tables: <TablesScreen go={go} cart={cart} selectTable={selectTable} />,
+    menu: <MenuScreen go={go} tableId={selectedTable} cart={cart} setQty={setQty} />,
+    bill: <BillScreen go={go} tableId={selectedTable} cart={cart} setQty={setQty} payment={payment} setPayment={setPayment} />,
+    preview: <PreviewScreen go={go} tableId={selectedTable} cart={cart} payment={payment} billNo={billNoPreview} saveBill={saveBill} />,
+    saved: <SavedScreen go={go} lastBill={lastBill} />,
+  };
+
+  return (
+    <div className="w-full min-h-screen flex items-center justify-center py-8">
+      <div className="relative overflow-hidden flex flex-col"
+        style={{ width: 390, height: 800, maxWidth: "94vw", maxHeight: "94vh", borderRadius: 44, background: C.cream,
+          boxShadow: "0 30px 60px rgba(0,0,0,0.35), 0 0 0 10px #1a1a1a, 0 0 0 12px #333" }}>
+        {screenMap[screen]}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
